@@ -1,57 +1,63 @@
 document.addEventListener('DOMContentLoaded', () => {
+    let globalData = [];
 
     async function fetchLiveData() {
         try {
-            // Fetching from our local Node.js proxy server
             const response = await fetch('/api/data');
             if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
+            globalData = await response.json();
 
-            processKPIs(data);
-            processTasks(data);
+            processKPIs(globalData);
+            processTasks(globalData);
+            renderCandidates('all');
         } catch (error) {
             console.error("Could not fetch live sheet data via proxy.", error);
             document.getElementById('kpi-grid').innerHTML = '<p style="color:red; font-weight:bold;">Error: Make sure the Node server (server.js) is running on port 3000.</p>';
         }
     }
 
+    // Navigation Logic
+    const dashLink = document.getElementById('nav-dashboard');
+    const candLink = document.getElementById('nav-candidates');
+    const dashView = document.getElementById('dashboard-view');
+    const candView = document.getElementById('candidates-view');
+
+    dashLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        dashView.style.display = 'block';
+        candView.style.display = 'none';
+        dashLink.classList.add('active');
+        candLink.classList.remove('active');
+    });
+
+    candLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        dashView.style.display = 'none';
+        candView.style.display = 'block';
+        candLink.classList.add('active');
+        dashLink.classList.remove('active');
+        renderCandidates('all');
+    });
+
+    // KPI and Task processing remains the same basically
     function processKPIs(data) {
         const totalCandidates = data.length;
-
-        let llmQualified = 0;
-        let videoCallsAttempted = 0;
-        let videoWatchedCount = 0;
-        let interviewsCompleted = 0;
-        let aiRecommended = 0;
-        let humanApproved = 0;
-        let totalRejected = 0;
-        let onHold = 0;
-        let meetingsBooked = 0;
+        let llmQualified = 0, videoCallsAttempted = 0, videoWatchedCount = 0, interviewsCompleted = 0, aiRecommended = 0, humanApproved = 0, totalRejected = 0, onHold = 0, meetingsBooked = 0;
 
         data.forEach(row => {
-            // Field Maps
             const score = parseFloat(row['LLM Resume Score'] || 0);
-            const r1Date = row['R1 Call Date'];
-            const r1Outcome = row['R1 Outcome'];
-            const videoWatched = row['Video Watched'];
-            const aiRec = row['AI Recommendation'];
-            const humanDec = row['Human Decision'];
-            const status = row['Status'];
-            const finalMeeting = row['Final Meeting Date/Time'];
-
             if (score >= 7.0) llmQualified++;
-            if (r1Date) videoCallsAttempted++;
-            if (videoWatched === 'Yes') videoWatchedCount++;
-            if (r1Outcome === 'Completed') interviewsCompleted++;
-            if (aiRec === 'Proceed') aiRecommended++;
-            if (humanDec === 'Approve') humanApproved++;
-            if (status === 'Disqualified' || status === 'R1 Rejected' || humanDec === 'Reject') totalRejected++;
-            if (status === 'On Hold' || humanDec === 'Hold') onHold++;
-            if (finalMeeting) meetingsBooked++;
+            if (row['R1 Call Date']) videoCallsAttempted++;
+            if (row['Video Watched'] === 'Yes') videoWatchedCount++;
+            if (row['R1 Outcome'] === 'Completed') interviewsCompleted++;
+            if (row['AI Recommendation'] === 'Proceed') aiRecommended++;
+            if (row['Human Decision'] === 'Approve') humanApproved++;
+            if (row['Status'] === 'Disqualified' || row['Status'] === 'R1 Rejected' || row['Human Decision'] === 'Reject') totalRejected++;
+            if (row['Status'] === 'On Hold' || row['Human Decision'] === 'Hold') onHold++;
+            if (row['Final Meeting Date/Time']) meetingsBooked++;
         });
 
         const dropOffRate = totalCandidates > 0 ? Math.round(((totalCandidates - meetingsBooked) / totalCandidates) * 100) + '%' : '0%';
-
         const kpis = [
             { title: "Total Candidates Sourced", value: totalCandidates, subtitle: "Total entries in CRM" },
             { title: "LLM Qualified (Score ≥ 7)", value: llmQualified, subtitle: Math.round((llmQualified / totalCandidates) * 100 || 0) + "% Pass Rate" },
@@ -64,53 +70,128 @@ document.addEventListener('DOMContentLoaded', () => {
             { title: "On Hold", value: onHold, subtitle: "Candidates parked by human" },
             { title: "Final Meetings Booked", value: meetingsBooked, subtitle: Math.round((meetingsBooked / humanApproved) * 100 || 0) + "% human approved" },
             { title: "Drop-off Rate by Stage", value: dropOffRate, subtitle: "Overall funnel leak" },
-            { title: "Time to Meeting Booked", value: "2.4h", subtitle: "Avg time from application (est.)" }
+            { title: "Time to Meeting Booked", value: "2.4h", subtitle: "Avg time from application" }
         ];
-
         renderKPIs(kpis);
     }
 
     function processTasks(data) {
-        // Today & Follow up logic
-        let callsToday = [];
-        let followUps = [];
-
+        let callsToday = [], followUps = [];
         data.forEach(row => {
-            // Find anyone with upcoming valid meetings / calls
-            // Just sorting generic R1 or Final meetings roughly into a list for demo
             if (row['R1 Schedule Date'] || row['Final Meeting Date/Time']) {
                 const time = row['Final Meeting Date/Time'] || row['R1 Schedule Date'] || 'Today';
                 if (callsToday.length < 5 && row['Full Name']) {
-                    callsToday.push({
-                        name: row['Full Name'],
-                        agent: row['Final Meeting Date/Time'] ? "Final Human Meeting" : "Agent 2 - Interview",
-                        time: time.substring(0, 16) || "Scheduled"
-                    });
+                    callsToday.push({ name: row['Full Name'], agent: row['Final Meeting Date/Time'] ? "Final Human Meeting" : "Agent 2 - Interview", time: time.substring(0, 16) || "Scheduled" });
                 }
             }
-
-            // Find follow-ups: Status No Answer or Not completed
             if (row['R1 Outcome'] === 'No Answer' && followUps.length < 4) {
-                followUps.push({
-                    name: row['Full Name'],
-                    status: "No Answer (Attempt 1)"
-                });
+                followUps.push({ name: row['Full Name'], status: "No Answer (Attempt 1)" });
             } else if (row['Video Watched'] === 'No' && followUps.length < 4) {
-                followUps.push({
-                    name: row['Full Name'],
-                    status: "Video Not Watched"
-                });
+                followUps.push({ name: row['Full Name'], status: "Video Not Watched" });
             }
         });
-
-        // Fallbacks if data empty
         if (callsToday.length === 0) callsToday = [{ name: "No calls scheduled", agent: "-", time: "-" }];
         if (followUps.length === 0) followUps = [{ name: "All caught up!", status: "0 tasks" }];
-
         renderTasks('calls-today-list', callsToday, true);
         renderTasks('follow-ups-list', followUps, false);
     }
 
+    // Candidate Rendering & Filtering
+    function renderCandidates(filterStatus) {
+        const listContainer = document.getElementById('candidate-list');
+        listContainer.innerHTML = '';
+
+        const filtered = filterStatus === 'all'
+            ? globalData
+            : globalData.filter(c => c['Human Decision'] === filterStatus);
+
+        filtered.forEach((c, index) => {
+            const item = document.createElement('div');
+            item.className = 'candidate-item';
+            item.style.animationDelay = `${index * 0.03}s`;
+
+            const statusClass = `status-${(c['Human Decision'] || 'pending').toLowerCase()}`;
+
+            item.innerHTML = `
+                <div class="candidate-info">
+                    <h3>${c['Full Name']}</h3>
+                    <p>${c['Location']} | ${c['Source']}</p>
+                </div>
+                <div class="candidate-actions">
+                    <span class="status-label ${statusClass}">${c['Human Decision'] || 'In Review'}</span>
+                    <button onclick="window.viewProfile('${c['ID']}')">View Profile</button>
+                </div>
+            `;
+            listContainer.appendChild(item);
+        });
+    }
+
+    // Filter Buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderCandidates(btn.dataset.filter);
+        });
+    });
+
+    // Profile View (Attached to window for inline onclick)
+    window.viewProfile = (id) => {
+        const c = globalData.find(cand => cand['ID'] === id);
+        if (!c) return;
+
+        const modal = document.getElementById('profile-modal');
+        const container = document.getElementById('modal-container');
+
+        // Define important keys to show first
+        const impKeys = ['Full Name', 'Email', 'Phone', 'Location', 'Status', 'LLM Resume Score', 'Human Decision'];
+
+        let impHTML = '';
+        let addHTML = '';
+
+        // Generate key-value pairs
+        Object.keys(c).forEach(key => {
+            const val = c[key] || 'N/A';
+            const html = `
+                <div class="info-item">
+                    <div class="info-key">${key}</div>
+                    <div class="info-value">${val}</div>
+                </div>
+            `;
+            if (impKeys.includes(key)) impHTML += html;
+            else addHTML += html;
+        });
+
+        container.innerHTML = `
+            <div class="profile-card">
+                <h2>${c['Full Name']} <span style="font-size: 1rem; color: #888;">#${c['ID']}</span></h2>
+                
+                <div class="profile-section">
+                    <h3>Core Information</h3>
+                    <div class="info-grid">
+                        ${impHTML}
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h3>Pipeline & Additional Details</h3>
+                    <div class="info-grid">
+                        ${addHTML}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+    };
+
+    // Modal Close
+    const modal = document.getElementById('profile-modal');
+    const closeBtn = document.querySelector('.close-modal');
+    closeBtn.onclick = () => modal.style.display = 'none';
+    window.onclick = (e) => { if (e.target == modal) modal.style.display = 'none'; };
+
+    // Common Renderers
     function renderKPIs(kpis) {
         const grid = document.getElementById('kpi-grid');
         grid.innerHTML = '';
@@ -118,14 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'kpi-card';
             card.style.animationDelay = `${index * 0.05}s`;
-
-            card.innerHTML = `
-                <div class="kpi-title">${kpi.title}</div>
-                <div>
-                    <div class="kpi-value">${kpi.value}</div>
-                    <div class="kpi-subtitle">${kpi.subtitle}</div>
-                </div>
-            `;
+            card.innerHTML = `<div class="kpi-title">${kpi.title}</div><div><div class="kpi-value">${kpi.value}</div><div class="kpi-subtitle">${kpi.subtitle}</div></div>`;
             grid.appendChild(card);
         });
     }
@@ -136,30 +210,12 @@ document.addEventListener('DOMContentLoaded', () => {
         items.forEach(item => {
             const li = document.createElement('li');
             li.className = 'task-item';
-
-            if (isCalls) {
-                li.innerHTML = `
-                    <div>
-                        <strong>${item.name}</strong><br>
-                        <span style="color: #666; font-size: 0.85rem;">${item.agent}</span>
-                    </div>
-                    <span class="task-badge">${item.time}</span>
-                `;
-            } else {
-                li.innerHTML = `
-                    <div>
-                        <strong>${item.name}</strong>
-                    </div>
-                    <span class="task-badge" style="background-color: #555;">${item.status}</span>
-                `;
-            }
+            if (isCalls) li.innerHTML = `<div><strong>${item.name}</strong><br><span style="color: #666; font-size: 0.85rem;">${item.agent}</span></div><span class="task-badge">${item.time}</span>`;
+            else li.innerHTML = `<div><strong>${item.name}</strong></div><span class="task-badge" style="background-color: #555;">${item.status}</span>`;
             list.appendChild(li);
         });
     }
 
-    // Initialize UI
     fetchLiveData();
-
-    // Auto-refresh every 15 seconds
     setInterval(fetchLiveData, 15000);
 });

@@ -59,8 +59,11 @@ body {
     transition: var(--transition);
 }
 
-.nav-links a:hover {
+.nav-links a:hover,
+.nav-links a.active {
     color: var(--text-color);
+    border-bottom: 2px solid var(--blue-primary);
+    padding-bottom: 5px;
 }
 
 .nav-cta {
@@ -269,16 +272,241 @@ body {
     }
 }
 
+/* View Header & Filter Controls */
+.view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.view-header h2 {
+    font-size: 2rem;
+    font-weight: 900;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-btn {
+    padding: 10px 20px;
+    border-radius: 30px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.filter-btn:hover {
+    background: #f0f0f0;
+}
+
+.filter-btn.active {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+}
+
+/* Candidate List Styling */
+.candidate-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.candidate-item {
+    background: var(--card-bg);
+    padding: 20px 30px;
+    border-radius: var(--border-radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: var(--transition);
+    animation: fadeInUp 0.4s forwards;
+}
+
+.candidate-item:hover {
+    transform: scale(1.01);
+    background: #eee;
+}
+
+.candidate-info h3 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+.candidate-info p {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.candidate-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.candidate-actions button {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    background: #000;
+    color: #fff;
+    transition: var(--transition);
+}
+
+.candidate-actions button:hover {
+    background: #333;
+}
+
+.status-label {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+.status-approve {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-hold {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-reject {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Modal Styling */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    transition: opacity 0.3s ease;
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 50px;
+    width: 80%;
+    max-width: 900px;
+    border-radius: 32px;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalPop {
+    from {
+        transform: scale(0.8) translateY(50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+.close-modal {
+    position: absolute;
+    right: 30px;
+    top: 25px;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa;
+}
+
+.close-modal:hover {
+    color: #000;
+}
+
+/* Profile Card Styling */
+.profile-card h2 {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 15px;
+}
+
+.profile-section {
+    margin-bottom: 40px;
+}
+
+.profile-section h3 {
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    color: var(--blue-primary);
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.info-item {
+    background: #f9f9f9;
+    padding: 15px 20px;
+    border-radius: 16px;
+    transition: var(--transition);
+}
+
+.info-item:hover {
+    background: #f0f0f0;
+}
+
+.info-key {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #222;
+}
+
 @media (max-width: 768px) {
-    .dashboard-bottom {
-        grid-template-columns: 1fr;
+    .view-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
     }
 
-    .hero-title {
-        font-size: 2.8rem;
+    .candidate-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
     }
 
-    .nav-links {
-        display: none;
+    .modal-content {
+        width: 95%;
+        padding: 30px;
     }
 }

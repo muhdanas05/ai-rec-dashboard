@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Recruiting Autopilot</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;0,900;1,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;0,900;1,800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="top-banner">
         We're Hiring! Click to learn more.
     </div>
-    
+
     <nav class="navbar">
         <div class="logo">INFLATE</div>
         <div class="nav-links">
-            <a href="#">Dashboard</a>
-            <a href="#">Candidates</a>
-            <a href="#">Pipeline</a>
-            <a href="#">Agents</a>
-            <a href="#">Settings</a>
+            <a href="#" id="nav-dashboard" class="active">Dashboard</a>
+            <a href="#" id="nav-candidates">Candidates</a>
+            <a href="#" id="nav-pipeline">Pipeline</a>
+            <a href="#" id="nav-agents">Agents</a>
+            <a href="#" id="nav-settings">Settings</a>
         </div>
         <button class="nav-cta">Book an Introductory Call</button>
     </nav>
@@ -31,26 +34,57 @@
     </header>
 
     <main class="dashboard-container">
-        <section class="kpi-grid" id="kpi-grid">
-            <!-- KPIs injected via JS -->
+        <section id="dashboard-view">
+            <section class="kpi-grid" id="kpi-grid">
+                <!-- KPIs injected via JS -->
+            </section>
+
+            <div class="dashboard-bottom">
+                <section class="task-card">
+                    <h2>Calls Scheduled for Today</h2>
+                    <ul class="task-list" id="calls-today-list">
+                        <!-- Data injected via JS -->
+                    </ul>
+                </section>
+
+                <section class="task-card">
+                    <h2>Follow Ups Left</h2>
+                    <ul class="task-list" id="follow-ups-list">
+                        <!-- Data injected via JS -->
+                    </ul>
+                </section>
+            </div>
         </section>
 
-        <div class="dashboard-bottom">
-            <section class="task-card">
-                <h2>Calls Scheduled for Today</h2>
-                <ul class="task-list" id="calls-today-list">
-                    <!-- Data injected via JS -->
-                </ul>
-            </section>
-            
-            <section class="task-card">
-                <h2>Follow Ups Left</h2>
-                <ul class="task-list" id="follow-ups-list">
-                    <!-- Data injected via JS -->
-                </ul>
-            </section>
-        </div>
+        <!-- NEW: Candidates Section -->
+        <section id="candidates-view" style="display: none;">
+            <div class="view-header">
+                <h2>All Candidates</h2>
+                <div class="filter-controls">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="Approve">Approved</button>
+                    <button class="filter-btn" data-filter="Hold">Hold</button>
+                    <button class="filter-btn" data-filter="Reject">Rejected</button>
+                </div>
+            </div>
+            <div class="candidate-list-container">
+                <div id="candidate-list" class="candidate-list">
+                    <!-- Candidates injected via JS -->
+                </div>
+            </div>
+        </section>
     </main>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="modal-container">
+                <!-- Profile details injected via JS -->
+            </div>
+        </div>
+    </div>
+
 
     <footer class="footer">
         <div class="footer-content">
@@ -61,4 +95,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>
